@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const slotsRoutes = require('./api/routes/slots');
 const bookingsRoutes = require('./api/routes/bookings');
 const resetRoutes = require('./api/routes/reset');
+const checkApiKey = require('./api/middleware/check-api-key')
 
 const app = express()
 
@@ -25,6 +26,7 @@ app.use((req, res, next) => {
     next();
 })
 
+app.use(checkApiKey); 
 app.use('/slots', slotsRoutes)
 app.use('/bookings', bookingsRoutes)
 app.use('/reset', resetRoutes)

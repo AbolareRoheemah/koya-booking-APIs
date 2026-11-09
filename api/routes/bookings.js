@@ -18,9 +18,9 @@ router.get('/:bookingId', async (req, res, next) => {
 // book a slot
 router.post('/', async (req, res, next) => {
     const { slot_id, name, email } = req.body;
-    slot_id = slot_id.trim();
-    name = name.trim();
-    email = email.trim().toLowerCase();
+    slot_id = slot_id.trim() || "";
+    name = name.trim() || "";
+    email = email.trim().toLowerCase() || "";
 
     if (!slot_id || !name || !email || !EMAIL_RE.test(email)) {
         return (res.status(400).json({
