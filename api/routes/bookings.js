@@ -11,7 +11,7 @@ router.get('/', (req, res, next) => {
 // Get a particular booking
 router.get('/:bookingId', async (req, res, next) => {
     const booking = await Booking.findOne({ id: req.params.bookingId });
-    if (!booking) return res.status(404).json({ error: "booking not found" });
+    if (!booking) return res.status(404).json({ error: "slot not found" });
     res.status(200).json(booking);
 })
 
@@ -58,5 +58,15 @@ router.post('/', async (req, res, next) => {
         throw e;
     }
 }) 
+
+// delete a booking
+router.delete("/:bookingId", async (req, res, next) => {
+    const id = req.params.bookingId;
+    const deleted_booking = await Booking.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true });
+    if (!deleted_booking || deleted_booking == null) {
+        return res.status(404).json({ error: "slot not found" });
+    }
+    res.status(200).json(deleted_booking)
+})
 
 module.exports = router;
