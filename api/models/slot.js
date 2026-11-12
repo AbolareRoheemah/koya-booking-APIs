@@ -1,6 +1,6 @@
 const mongoose =  require('mongoose');
 const slotSchema = mongoose.Schema({
-    id: String,
+    _id: String,
     provider: String,
     start: String,
     end: String,

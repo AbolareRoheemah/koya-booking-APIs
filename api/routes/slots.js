@@ -5,19 +5,24 @@ const mongoose = require('mongoose');
 const Booking = require('../models/booking');
 
 router.get('/', async (req, res, next) => {
-    filter = req.query.provider ? { provider: req.query.provider } : {};
-    const slots = await Slot.find(filter).sort({ startMs: 1 }).toArray();
-    const booked = Booking.distinct('slot_id', { status: 'confirmed' })
-    res.status(200).json({
-        slots: slots.map(slot => ({
-            id: slot.id, 
-            provider: slot.provider, 
-            start: slot.start, 
-            end: slot.end,
-            available: !booked.has(slot.id),
-        }))
-    })
-}) 
+    try {
+        const filter = req.query.provider ? { provider: req.query.provider } : {};
+        const slots = await Slot.find(filter).sort({ startMs: 1 });
+        const booked = await Booking.distinct('slot_id', { status: 'confirmed' });
+
+        res.status(200).json({
+            slots: slots.map(slot => ({
+                id: slot.id,
+                provider: slot.provider,
+                start: slot.start,
+                end: slot.end,
+                available: !booked.includes(slot.id),
+            }))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
 
 router.post('/', (req, res, next) => {
     const slot = new Slot({

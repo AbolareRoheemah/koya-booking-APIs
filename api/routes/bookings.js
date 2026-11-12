@@ -76,15 +76,9 @@ router.get('/:bookingId', async (req, res, next) => {
 })
 
 async function createBooking(body) {
-    const slot_id = typeof body.slot_id === "string" ? body.slot_id.trim() : "";
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-
-    if (!slot_id || !name || !email || !EMAIL_RE.test(email)) {
-        return (res.status(400).json({
-            error: "slot_id, name and a valid email are required"
-        }))
-    }
+    const slot_id = typeof body.slot_id === 'string' ? body.slot_id.trim() : '';
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 
     if (email) {
         const mine = await Attempt.create({ email });
@@ -105,35 +99,26 @@ async function createBooking(body) {
         }
     }
 
-    const slot_to_book = await slots.findOne({ _id: slot_id });
-    if(!slot_to_book) { 
-        return (res.status(404).json({
-            error: "slot not found" 
-        }))
-    };
-    if (slot_to_book.startMs <= Date.now()) {
-        return (res.status(400).json({
-            error: "slot has already started" 
-        }))
+    if (!slot_id || !name || !email || !EMAIL_RE.test(email)) {
+        return { status: 400, body: { error: 'slot_id, name and a valid email are required' } };
     }
 
-    const booking = new Booking({
-        slot_id: slot_id,
-        name: name,
-        status: "confirmed",
-        created_at: new Date()
-    });
+    const slot = await Slot.findById(slot_id);
+    if (!slot) {
+        return { status: 404, body: { error: 'slot not found' } };
+    }
+    if (slot.startMs <= Date.now()) {
+        return { status: 400, body: { error: 'slot has already started' } };
+    }
+
     try {
-        const result = await Booking.create(booking);
-        return (
-            res.status(201).json({
-                status: 'confirmed',
-                booking: result
-            })
-        );
-    } catch (e) {
-        if (e.code === 11000) return res.status(409).json({error: "Slot already booked"});
-        throw e;
+        const booking = await Booking.create({ slot_id, name, email });
+        return { status: 201, body: format(booking) };
+    } catch (err) {
+        if (err.code === 11000) {
+            return { status: 409, body: { error: 'slot already booked' } };
+        }
+        throw err;
     }
 }
 
@@ -193,16 +178,16 @@ router.post('/', async (req, res, next) => {
         }
         return res.status(result.status).json(result.body);
     } catch (error) {
-        next(err);
+        next(error);
     }
 }) 
 
 // delete a booking
 router.delete("/:bookingId", async (req, res, next) => {
     try {
-        if (!OBJECT_ID_RE.test(req.params.id)) {
-            return res.status(404).json({ error: 'booking not found' });
-        }
+        // if (!OBJECT_ID_RE.test(req.params.id)) {
+        //     return res.status(404).json({ error: 'booking not found' });
+        // }
         const booking = await Booking.findByIdAndUpdate(
             req.params.bookingId,
             { status: 'cancelled' },

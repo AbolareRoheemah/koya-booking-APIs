@@ -9,8 +9,10 @@ const resetRoutes = require('./api/routes/reset');
 const checkApiKey = require('./api/middleware/check-api-key')
 
 const app = express()
+// const dns = require('dns');
+// dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-mongoose.connect('mongodb+srv://roheemahabo_db_user:' + process.env.MONGODB_PASSWORD + '@cluster0.3sjct.mongodb.net/?appName=Cluster0');
+mongoose.connect('mongodb://roheemahabo_db_user:' + process.env.MONGODB_PASSWORD + '@ac-cf5p1m2-shard-00-00.21wepeq.mongodb.net:27017,ac-cf5p1m2-shard-00-01.21wepeq.mongodb.net:27017,ac-cf5p1m2-shard-00-02.21wepeq.mongodb.net:27017/?ssl=true&replicaSet=atlas-epyen9-shard-0&authSource=admin');
 mongoose.Promise = global.Promise;
 
 app.use(bodyParser.urlencoded({ extended: false }));
