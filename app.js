@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
     next();
 })
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(checkApiKey); 
 app.use('/slots', slotsRoutes)
 app.use('/bookings', bookingsRoutes)

@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Clinic Booking</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: teal;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .container { 
+            max-width: 820px; 
+            margin: 0 auto; 
+            padding: 2.5rem 1rem 4rem; 
+        }
+
+        card {
+            font-family: system-ui;
+            max-width: 640px;
+            margin: 2rem auto;
+            padding: 5rem 1rem
+        }
+
+        .slots {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: .6rem .8rem;
+            margin: .4rem 0
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            margin: .4rem 0;
+            padding: .5rem;
+            box-sizing: border-box
+        }
+
+        button {
+            padding: .4rem .8rem;
+            margin: 1rem;
+        }
+
+        #confirmation {
+            margin-top: 1rem;
+            font-weight: 600
+        }
+
+        .logo {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto;
+            display: grid;
+            place-items: center;
+            background: var(--brand);
+            font-size: 2rem;
+            font-weight: 700;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, .35);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <header class="hero">
+          <div class="logo">+</div>
+          <h1>Book an appointment</h1>
+          <p>Choose a time that suits you. You'll get your confirmation straight away.</p>
+        </header>
+      
+        <div id="message" class="message" hidden></div>
+      
+        <section class="card">
+          <h2>Available slots</h2>
+          <div id="slots" class="slots">Loading slots...</div>
+        </section>
+      
+        <form id="booking-form" class="card" hidden>
+          <h2>Your details</h2>
+          <p id="chosen-slot" class="chosen"></p>
+      
+          <label for="name">Full name</label>
+          <input id="name" placeholder="e.g. Ada Obi" required>
+      
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" required>
+      
+          <div class="actions">
+            <button id="cancel-btn" type="button" class="btn btn-ghost">Back</button>
+            <button id="submit-btn" type="submit" class="btn btn-primary">Confirm booking</button>
+          </div>
+        </form>
+      
+        <section id="confirmation" class="card confirm" hidden></section>
+      </main>
+
+    <script>
+        const KEY = "56879sa8226hf84684n747nbd88014";
+        const headers = { "X-API-Key": KEY, "Content-Type": "application/json" };
+        let chosenSlot = null;
+        let chosenLabel = '';
+        let idempotencyKey = null;
+        const newKey = () =>
+            (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : Date.now() + '-' + Math.random().toString(16).slice(2);
+
+        async function loadSlots() {
+            const box = document.getElementById('slots');
+            try {
+                const res = await fetch('/slots', { headers });
+                const data = await res.json();
+                if (!res.ok) { box.textContent = data.error; return; }
+
+                // hide slots in the past
+                const upcoming = data.slots.filter(s => new Date(s.start) > new Date());
+                if (upcoming.length === 0) { box.textContent = 'No slots available.'; return; }
+
+                box.innerHTML = '';
+                upcoming.forEach(slot => {
+                    const row = document.createElement('div');
+                    const text = document.createElement('span');
+                    text.textContent = `${slot.provider} - ${new Date(slot.start).toLocaleString()}`;
+                    const btn = document.createElement('button');
+                    btn.textContent = slot.available ? 'Book' : 'Taken';
+                    btn.disabled = !slot.available;
+                    btn.addEventListener('click', () => chooseSlot(slot, text.textContent));
+                    row.append(text, btn);
+                    box.appendChild(row);
+                });
+            } catch {
+                box.textContent = 'Could not load slots. Please refresh.';
+            }
+        }
+
+        function chooseSlot(slot, label) {
+            chosenSlot = slot;
+            chosenLabel = label;
+            idempotencyKey = newKey();
+            document.getElementById('chosen-slot').textContent = label;
+            document.getElementById('booking-form').hidden = false;
+            document.getElementById('confirmation').hidden = true;
+            document.getElementById('message').textContent = '';
+        }
+
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            document.getElementById('booking-form').hidden = true;
+        });
+
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const message = document.getElementById('message');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/bookings', {
+                    method: 'POST',
+                    headers: { ...headers, 'Idempotency-Key': idempotencyKey },
+                    body: JSON.stringify({
+                        slot_id: chosenSlot.id,
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value
+                    })
+                });
+                const data = await res.json();
+                idempotencyKey = newKey();
+
+                if (res.ok) {
+                    showConfirmation(data);
+                } else if (res.status === 409) {
+                    message.textContent = 'Sorry, that slot was just taken. Please choose another.';
+                    document.getElementById('booking-form').hidden = true;
+                } else if (res.status === 429) {
+                    message.textContent = `Too many attempts. Try again in ${res.headers.get('Retry-After')} seconds.`;
+                } else {
+                    message.textContent = data.error;
+                }
+                loadSlots();
+            } catch {
+                // Keep the SAME key so pressing the button again is safe.
+                message.textContent = 'Network problem. Press Confirm again. You will not be booked twice.';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function showConfirmation(b) {
+            document.getElementById('booking-form').hidden = true;
+            const box = document.getElementById('confirmation');
+            box.hidden = false;
+            box.textContent = `Booking ${b.status}! ${chosenLabel} | Name: ${b.name} | Email: ${b.email} | Booking ID: ${b.id}`;
+        }
+
+        loadSlots();
+    </script>
+</body>
+
+</html>
