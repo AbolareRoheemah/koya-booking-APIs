@@ -2,13 +2,19 @@ const express = require('express');
 const router = express.Router()
 const Slot = require('../models/slot');
 const Booking = require('../models/booking');
+const Idempotency = require('../models/idempotency');
+const Attempt = require('../models/attempt');
 const mongoose = require('mongoose');
 
 router.post('/', async (req, res, next) => {
     const slots = req.body.slots;
     if (!Array.isArray(slots)) return res.status(400).json({ error: "slots must be an array" });
-    await Slot.deleteMany({});
-    await Booking.deleteMany({});
+    await Promise.all([
+        Booking.deleteMany({}),
+        Slot.deleteMany({}),
+        Idempotency.deleteMany({}),
+        Attempt.deleteMany({})
+    ]);
 
     const new_slots = slots.map(slot => {
         return {

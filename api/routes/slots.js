@@ -19,11 +19,6 @@ router.get('/', async (req, res, next) => {
     })
 }) 
 
-router.get('/:slotId', (req, res, next) => {
-    const id = req.params.slotId
-    res.status(200).json({message: "Handling GET request to /slots/slotId"})
-})
-
 router.post('/', (req, res, next) => {
     const slot = new Slot({
         id: new mongoose.Types.ObjectId(),

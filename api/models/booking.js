@@ -1,6 +1,5 @@
 const mongoose =  require('mongoose');
 const bookingSchema = mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     slot_id: {type: String, required: true},
     name: String,
     email: String,
@@ -12,5 +11,6 @@ bookingSchema.index(
     { slot_id: 1 },
     { unique: true, partialFilterExpression: { status: 'confirmed' } }
 );
+bookingSchema.index({ email: 1, _id: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);
