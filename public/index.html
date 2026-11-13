@@ -1,209 +1,291 @@
 <!doctype html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Clinic Booking</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            background: teal;
-            color: var(--text);
-            line-height: 1.5;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book an appointment</title>
+  <style>
+    :root {
+      --brand: #0d9488;
+      --brand-dark: #0f766e;
+      --brand-soft: #ccfbf1;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --error-bg: #fee2e2;
+      --error-text: #991b1b;
+    }
 
-        .container { 
-            max-width: 820px; 
-            margin: 0 auto; 
-            padding: 2.5rem 1rem 4rem; 
-        }
+    * { box-sizing: border-box; }
 
-        card {
-            font-family: system-ui;
-            max-width: 640px;
-            margin: 2rem auto;
-            padding: 5rem 1rem
-        }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(180deg, var(--brand-soft) 0, var(--bg) 280px) no-repeat, var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
 
-        .slots {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: .6rem .8rem;
-            margin: .4rem 0
-        }
+    [hidden] { display: none !important; }
 
-        input {
-            display: block;
-            width: 100%;
-            margin: .4rem 0;
-            padding: .5rem;
-            box-sizing: border-box
-        }
+    .container { max-width: 620px; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
 
-        button {
-            padding: .4rem .8rem;
-            margin: 1rem;
-        }
+    .hero { text-align: center; margin-bottom: 1.75rem; }
+    .hero h1 { margin: .5rem 0 .25rem; font-size: 1.9rem; }
+    .hero p { margin: 0; color: var(--muted); }
+    .logo {
+      width: 52px; height: 52px; margin: 0 auto;
+      display: grid; place-items: center;
+      background: var(--brand); color: #fff;
+      font-size: 2rem; font-weight: 700;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(13, 148, 136, .35);
+    }
 
-        #confirmation {
-            margin-top: 1rem;
-            font-weight: 600
-        }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, .06);
+    }
+    .card h2 { margin: 0 0 1rem; font-size: 1.1rem; }
 
-        .logo {
-            width: 52px;
-            height: 52px;
-            margin: 0 auto;
-            display: grid;
-            place-items: center;
-            background: var(--brand);
-            font-size: 2rem;
-            font-weight: 700;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(13, 148, 136, .35);
-        }
-    </style>
+    .slots { display: grid; gap: .6rem; color: var(--muted); }
+    .slot {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: .8rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .slot:hover { border-color: var(--brand); box-shadow: 0 4px 12px rgba(13, 148, 136, .15); transform: translateY(-1px); }
+    .slot strong { display: block; }
+    .slot span { color: var(--muted); font-size: .9rem; }
+    .slot.is-taken { opacity: .55; background: #f8fafc; }
+    .slot.is-taken:hover { border-color: var(--border); box-shadow: none; transform: none; }
+
+    label { display: block; margin: .9rem 0 .3rem; font-size: .9rem; font-weight: 600; }
+    input {
+      width: 100%; padding: .7rem .85rem;
+      font: inherit;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+    input:focus { outline: 3px solid var(--brand-soft); border-color: var(--brand); }
+
+    .chosen {
+      margin: 0; padding: .6rem .85rem;
+      background: var(--brand-soft); color: var(--brand-dark);
+      border-radius: 10px; font-weight: 600;
+    }
+
+    .actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.25rem; }
+
+    .btn {
+      padding: .6rem 1.1rem;
+      font: inherit; font-weight: 600;
+      border: 0; border-radius: 10px; cursor: pointer;
+      transition: background .15s, transform .05s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn-primary:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f8fafc; }
+
+    .message { padding: .8rem 1rem; border-radius: 12px; margin-bottom: 1.25rem; font-weight: 600; }
+    .message.error { background: var(--error-bg); color: var(--error-text); }
+    .message.info { background: var(--brand-soft); color: var(--brand-dark); }
+
+    .confirm { border-color: var(--brand); }
+    .confirm h2 { color: var(--brand-dark); font-size: 1.3rem; }
+    .confirm dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; }
+    .confirm dt { color: var(--muted); }
+    .confirm dd { margin: 0; font-weight: 600; word-break: break-all; }
+
+    @media (max-width: 480px) {
+      .slot { flex-direction: column; align-items: stretch; }
+      .actions { flex-direction: column-reverse; }
+    }
+  </style>
 </head>
-
 <body>
-    <main class="container">
-        <header class="hero">
-          <div class="logo">+</div>
-          <h1>Book an appointment</h1>
-          <p>Choose a time that suits you. You'll get your confirmation straight away.</p>
-        </header>
-      
-        <div id="message" class="message" hidden></div>
-      
-        <section class="card">
-          <h2>Available slots</h2>
-          <div id="slots" class="slots">Loading slots...</div>
-        </section>
-      
-        <form id="booking-form" class="card" hidden>
-          <h2>Your details</h2>
-          <p id="chosen-slot" class="chosen"></p>
-      
-          <label for="name">Full name</label>
-          <input id="name" placeholder="e.g. Ada Obi" required>
-      
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="you@example.com" required>
-      
-          <div class="actions">
-            <button id="cancel-btn" type="button" class="btn btn-ghost">Back</button>
-            <button id="submit-btn" type="submit" class="btn btn-primary">Confirm booking</button>
-          </div>
-        </form>
-      
-        <section id="confirmation" class="card confirm" hidden></section>
-      </main>
+  <main class="container">
+    <header class="hero">
+      <div class="logo">+</div>
+      <h1>Book an appointment</h1>
+      <p>Choose a time that suits you. You'll get your confirmation straight away.</p>
+    </header>
 
-    <script>
-        const KEY = "56879sa8226hf84684n747nbd88014";
-        const headers = { "X-API-Key": KEY, "Content-Type": "application/json" };
-        let chosenSlot = null;
-        let chosenLabel = '';
-        let idempotencyKey = null;
-        const newKey = () =>
-            (window.crypto && crypto.randomUUID)
-                ? crypto.randomUUID()
-                : Date.now() + '-' + Math.random().toString(16).slice(2);
+    <div id="message" class="message" hidden></div>
 
-        async function loadSlots() {
-            const box = document.getElementById('slots');
-            try {
-                const res = await fetch('/slots', { headers });
-                const data = await res.json();
-                if (!res.ok) { box.textContent = data.error; return; }
+    <section class="card">
+      <h2>Available slots</h2>
+      <div id="slots" class="slots">Loading slots...</div>
+    </section>
 
-                // hide slots in the past
-                const upcoming = data.slots.filter(s => new Date(s.start) > new Date());
-                if (upcoming.length === 0) { box.textContent = 'No slots available.'; return; }
+    <form id="booking-form" class="card" hidden>
+      <h2>Your details</h2>
+      <p id="chosen-slot" class="chosen"></p>
 
-                box.innerHTML = '';
-                upcoming.forEach(slot => {
-                    const row = document.createElement('div');
-                    const text = document.createElement('span');
-                    text.textContent = `${slot.provider} - ${new Date(slot.start).toLocaleString()}`;
-                    const btn = document.createElement('button');
-                    btn.textContent = slot.available ? 'Book' : 'Taken';
-                    btn.disabled = !slot.available;
-                    btn.addEventListener('click', () => chooseSlot(slot, text.textContent));
-                    row.append(text, btn);
-                    box.appendChild(row);
-                });
-            } catch {
-                box.textContent = 'Could not load slots. Please refresh.';
-            }
-        }
+      <label for="name">Full name</label>
+      <input id="name" placeholder="e.g. Ada Obi" required>
 
-        function chooseSlot(slot, label) {
-            chosenSlot = slot;
-            chosenLabel = label;
-            idempotencyKey = newKey();
-            document.getElementById('chosen-slot').textContent = label;
-            document.getElementById('booking-form').hidden = false;
-            document.getElementById('confirmation').hidden = true;
-            document.getElementById('message').textContent = '';
-        }
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" required>
 
-        document.getElementById('cancel-btn').addEventListener('click', () => {
-            document.getElementById('booking-form').hidden = true;
+      <div class="actions">
+        <button id="cancel-btn" type="button" class="btn btn-ghost">Back</button>
+        <button id="submit-btn" type="submit" class="btn btn-primary">Confirm booking</button>
+      </div>
+    </form>
+
+    <section id="confirmation" class="card confirm" hidden></section>
+  </main>
+
+  <script>
+    const API_KEY = '56879sa8226hf84684n747nbd88014';
+    const headers = { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' };
+
+    let chosenSlot = null;
+    let chosenLabel = '';
+    let idempotencyKey = null;
+
+    const newKey = () =>
+      (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Date.now() + '-' + Math.random().toString(16).slice(2);
+
+    // ---------- Messages ----------
+    function showMessage(text, type = 'error') {
+      const box = document.getElementById('message');
+      box.textContent = text;
+      box.className = 'message ' + type;
+      box.hidden = !text;
+    }
+
+    async function loadSlots() {
+      const box = document.getElementById('slots');
+      try {
+        const res = await fetch('/slots', { headers });
+        const data = await res.json();
+        if (!res.ok) { box.textContent = data.error; return; }
+
+        // /slots also returns slots in the past, so hide them
+        const upcoming = data.slots.filter(s => new Date(s.start) > new Date());
+        if (upcoming.length === 0) { box.textContent = 'No slots available.'; return; }
+
+        box.innerHTML = '';
+        upcoming.forEach(slot => {
+          const row = document.createElement('div');
+          row.className = 'slot' + (slot.available ? '' : ' is-taken');
+
+          const info = document.createElement('div');
+          const provider = document.createElement('strong');
+          provider.textContent = slot.provider;
+          const time = document.createElement('span');
+          time.textContent = new Date(slot.start).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+          info.append(provider, time);
+
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-primary';
+          btn.textContent = slot.available ? 'Book' : 'Taken';
+          btn.disabled = !slot.available;
+          btn.addEventListener('click', () => chooseSlot(slot, `${slot.provider} · ${time.textContent}`));
+
+          row.append(info, btn);
+          box.appendChild(row);
         });
+      } catch {
+        box.textContent = 'Could not load slots. Please refresh.';
+      }
+    }
 
-        document.getElementById('booking-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            const message = document.getElementById('message');
-            btn.disabled = true;
+    function chooseSlot(slot, label) {
+      chosenSlot = slot;
+      chosenLabel = label;
+      idempotencyKey = newKey();            // one fresh key per booking attempt
+      document.getElementById('chosen-slot').textContent = label;
+      document.getElementById('confirmation').hidden = true;
+      showMessage('');
+      const form = document.getElementById('booking-form');
+      form.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-            try {
-                const res = await fetch('/bookings', {
-                    method: 'POST',
-                    headers: { ...headers, 'Idempotency-Key': idempotencyKey },
-                    body: JSON.stringify({
-                        slot_id: chosenSlot.id,
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value
-                    })
-                });
-                const data = await res.json();
-                idempotencyKey = newKey();
+    document.getElementById('cancel-btn').addEventListener('click', () => {
+      document.getElementById('booking-form').hidden = true;
+    });
 
-                if (res.ok) {
-                    showConfirmation(data);
-                } else if (res.status === 409) {
-                    message.textContent = 'Sorry, that slot was just taken. Please choose another.';
-                    document.getElementById('booking-form').hidden = true;
-                } else if (res.status === 429) {
-                    message.textContent = `Too many attempts. Try again in ${res.headers.get('Retry-After')} seconds.`;
-                } else {
-                    message.textContent = data.error;
-                }
-                loadSlots();
-            } catch {
-                // Keep the SAME key so pressing the button again is safe.
-                message.textContent = 'Network problem. Press Confirm again. You will not be booked twice.';
-            } finally {
-                btn.disabled = false;
-            }
+    document.getElementById('booking-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      showMessage('');
+
+      try {
+        const res = await fetch('/bookings', {
+          method: 'POST',
+          headers: { ...headers, 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify({
+            slot_id: chosenSlot.id,
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value
+          })
         });
+        const data = await res.json();
+        idempotencyKey = newKey();
 
-        function showConfirmation(b) {
-            document.getElementById('booking-form').hidden = true;
-            const box = document.getElementById('confirmation');
-            box.hidden = false;
-            box.textContent = `Booking ${b.status}! ${chosenLabel} | Name: ${b.name} | Email: ${b.email} | Booking ID: ${b.id}`;
+        if (res.ok) {
+          showConfirmation(data);
+          document.getElementById('name').value = '';
+          document.getElementById('email').value = '';
+        } else if (res.status === 409) {
+          showMessage('Sorry, that slot was just taken. Please choose another.');
+          document.getElementById('booking-form').hidden = true;
+        } else if (res.status === 429) {
+          showMessage(`Too many attempts. Try again in ${res.headers.get('Retry-After')} seconds.`);
+        } else {
+          showMessage(data.error);
         }
-
         loadSlots();
-    </script>
-</body>
+      } catch {
+        // Keep the SAME key so pressing the button again is safe.
+        showMessage('Network problem. Press Confirm again. You will not be booked twice.', 'info');
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
+    function showConfirmation(b) {
+      document.getElementById('booking-form').hidden = true;
+      const box = document.getElementById('confirmation');
+      box.innerHTML = '';
+
+      const title = document.createElement('h2');
+      title.textContent = '✓ Booking ' + b.status;
+
+      const list = document.createElement('dl');
+      [['When', chosenLabel], ['Name', b.name], ['Email', b.email], ['Booking ID', b.id]]
+        .forEach(([label, value]) => {
+          const dt = document.createElement('dt'); dt.textContent = label;
+          const dd = document.createElement('dd'); dd.textContent = value;
+          list.append(dt, dd);
+        });
+
+      box.append(title, list);
+      box.hidden = false;
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    loadSlots();
+  </script>
+</body>
 </html>
